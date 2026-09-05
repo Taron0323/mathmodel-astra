@@ -53,6 +53,7 @@ $mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继
 | [references/figures.md](references/figures.md) | 基于实际结果的图表设计 |
 | [references/exemplars/synthesis.md](references/exemplars/synthesis.md) | 2025 年 CUMCM 论文学习与五张范例卡 |
 | [references/runtime.md](references/runtime.md) | 脚本接口、依赖与运行范围 |
+| [references/linear-solutions.md](references/linear-solutions.md) | 最终线性方案、取整与费用核对，附可运行接口和反例 |
 
 其他按需参考从 `SKILL.md` 路由进入。
 
@@ -80,7 +81,7 @@ python3 -m venv .venv
 
 命令与代码路径只展开 `{python}`、`{workspace}`、`{skill}` 三个保留标记，其他花括号保持原样。相对 `code` 路径从工作流 JSON 所在目录解析，支持从其他目录启动；详见[运行接口](references/runtime.md)。
 
-运行不需要科学计算依赖的可移植性回归测试：
+运行不需要科学计算依赖的回归测试，覆盖工作流可移植性与最终线性方案核验：
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -88,7 +89,13 @@ python3 -m unittest discover -s tests -v
 
 GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归测试和完整运行行为验收。实际状态见仓库 Actions；本地通过不代表远端检查已完成。
 
-发布前本地记录为 23 项运行行为检查通过、主示例 12 项数学检查通过。检查覆盖缺数据、真实中断与恢复、旧结果复用、输入或代码变化、归档保留及错误结果拦截。污染样例中的 FAIL 是预期拒绝，不等于主流程失败。这些结果只验证对应合成例和运行流程，不证明任意赛题的科学正确性。
+运输演练的本地记录为 23 项运行行为检查通过、主示例 12 项数学检查通过。检查覆盖缺数据、真实中断与恢复、旧结果复用、输入或代码变化、归档保留及错误结果拦截。污染样例中的 FAIL 是预期拒绝，不等于主流程失败。这些结果只验证对应合成例和运行流程，不证明任意赛题的科学正确性。
+
+## 核对最终优化方案
+
+`scripts/verify_linear_solution.py` 从独立登记的线性模型和最终解 JSON 复算约束、变量上下界、整数/二元域与目标值，适用于 LP/MILP 求解后以及取整、裁剪等后处理之后。只依赖标准库；提供输入哈希和逐项残差，区分可行性、费用一致性与尚未核验的最优性。
+
+完整模型格式、命令和“连续解取整后不可行”的合成例见[最终方案核验](references/linear-solutions.md)。模型语义仍需对题面核对，非线性与逻辑约束需使用相应检查。
 
 ## 论文来源
 

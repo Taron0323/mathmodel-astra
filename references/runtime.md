@@ -25,4 +25,6 @@ python <skill>/scripts/run_workflow.py status --manifest <demo>/workflow.json
 
 行为验收：`python <skill>/scripts/verify_runtime.py --workspace <项目>/practice/<新验收目录>`。使用 `--help` 核对当前版本接口。应检查缺数据、真实进程中断、恢复、复用、输入变化、输出损坏和不覆盖输入，而非仅匹配日志中的 PASS 字样。
 
+线性规划和混合整数线性规划的最终方案可接入 [verify_linear_solution.py](linear-solutions.md)，独立复算约束、变量域和目标值。它只依赖标准库，作为输出报告的核验阶段加入清单即可；通过可行性检查不等于证明最优性。
+
 运行器成功意味着命令退出和输出完整性通过。是否科学有效由该阶段具体的数学验证程序和队员核验决定，不能以运行器 COMPLETE 替代。
