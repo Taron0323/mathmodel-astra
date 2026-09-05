@@ -1,0 +1,6 @@
+interface:
+  display_name: "数学建模 Astra 科研辅助"
+  short_description: "组织数学建模、验证、绘图与论文证据交付，支持阶段推进和中断续接"
+  default_prompt: "使用 $mathmodel-astra 读取当前项目状态，推进到下一项有证据的建模科研辅助产出。"
+policy:
+  allow_implicit_invocation: true

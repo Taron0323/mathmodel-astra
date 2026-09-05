@@ -1,0 +1,89 @@
+# mathmodel-astra
+
+适配 GPT-6 Astra Max／Ultra 的数学建模科研辅助 Codex Skill。支持全流程推进和单阶段任务，把题面、数学模型、求解、验证、图表、论文与结论证据连接起来。
+
+## 安装
+
+使用已登录的 GitHub CLI 将本仓库克隆到个人技能目录：
+
+```sh
+gh repo clone Taron0323/mathmodel-astra ~/.agents/skills/mathmodel-astra
+```
+
+目标目录已有同名 Skill 时，先比较并备份已有版本；克隆命令不会覆盖非空目录。重新打开 Codex 会话，在技能列表中确认 `mathmodel-astra` 可用。使用此 Skill 本身无需运行运输演练或安装科学计算库。
+
+## 调用
+
+在数学建模项目目录中选择客户端实际支持的模型与推理档位，再发送：
+
+```text
+$mathmodel-astra 读取当前项目，按已授权目标推进到下一项可验收产出；复用已有有效结果，需要密码或登录的网站直接跳过。
+```
+
+常用单阶段任务：
+
+```text
+$mathmodel-astra 审查这一问的目标函数、约束和假设，给出可解释基线、验证方法与退出条件。
+
+$mathmodel-astra 依据已有结果修订摘要，删除空泛评价和冗余防御措辞，保留条件、误差及失败结果。
+
+$mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继续未完成阶段。
+```
+
+## 工作方式
+
+- Max 建议用于资料整理、实现、常规验证、绘图和正文修订；Ultra 建议用于关键数学抽象、复杂推导、证据冲突和科学审查。档位需要在客户端设置，提示词不能自行切换。
+- 先发现当前项目的 `AGENTS.md`、配置和事实记录，按阶段加载参考，不要求所有项目采用同一布局。
+- 原始输入只读，保存 SHA-256；清洗、求解和绘图分离。结论关联代码、结果、图表及论文位置。
+- 已验证且未变化的结果复用；输入、代码或环境变化后只重跑受影响阶段。支持检查点、失败记录和中断恢复。
+- 单阶段请求只处理相应阶段及必要依赖。项目的 `mathmodel-grill`、`mathmodel-writing` 可按需协作，缺失时使用随包参考。
+- 正式核心建模和分析由参赛队主导；按实际比赛与年份核验规则，分别记录 AI 核验、人工核验和提交状态。
+
+## 内容
+
+| 路径 | 用途 |
+| --- | --- |
+| [SKILL.md](SKILL.md) | 技能入口、触发范围和阶段路由 |
+| [agents/openai.yaml](agents/openai.yaml) | Codex 显示信息和调用策略 |
+| [references/workflow.md](references/workflow.md) | 全流程、阶段依赖和续接 |
+| [references/astra-modes.md](references/astra-modes.md) | Max／Ultra 策略和配置证据 |
+| [references/problem-types.md](references/problem-types.md) | 题型、数学结构和基线 |
+| [references/verification.md](references/verification.md) | 正确性、敏感性及稳健性检查 |
+| [references/writing.md](references/writing.md) | 自然、准确的中文表达 |
+| [references/figures.md](references/figures.md) | 基于实际结果的图表设计 |
+| [references/exemplars/synthesis.md](references/exemplars/synthesis.md) | 2025 年 CUMCM 论文学习与五张范例卡 |
+| [references/runtime.md](references/runtime.md) | 脚本接口、依赖与运行范围 |
+
+其他按需参考从 `SKILL.md` 路由进入。
+
+## 运行合成演练
+
+通用运行器只依赖 Python 标准库。运输演练需要 Python 3.10+、NumPy、SciPy 和 Matplotlib；进程中断与超时使用 POSIX 信号，实际验证平台为 macOS，Windows 原生行为尚未验证。
+
+在仓库根目录执行：
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-demo.txt
+.venv/bin/python scripts/transport_demo.py init --workspace practice/transport-demo
+.venv/bin/python scripts/run_workflow.py run --manifest practice/transport-demo/workflow.json
+.venv/bin/python scripts/run_workflow.py status --manifest practice/transport-demo/workflow.json
+```
+
+`init` 要求新目录。生成内容包括输入与验收预设、结果 CSV、SVG/PNG、中文短文、claims 映射和运行元数据。上述合成例的最小费用为 25，顺序分配基线为 43。
+
+需要验证运行器行为时，在新目录执行：
+
+```sh
+.venv/bin/python scripts/verify_runtime.py --workspace practice/runtime-validation
+```
+
+发布前本地记录为 23 项运行行为检查通过、主示例 12 项数学检查通过。检查覆盖缺数据、真实中断与恢复、旧结果复用、输入或代码变化、归档保留及错误结果拦截。污染样例中的 FAIL 是预期拒绝，不等于主流程失败。这些结果只验证对应合成例和运行流程，不证明任意赛题的科学正确性。
+
+## 论文来源
+
+范例来自[中国大学生在线 2025 年 CUMCM 展示目录](https://dxs.moe.gov.cn/zx/hd/sxjm/sxjmlw/2025qgdxssxjmjslwzs/)。A/B/C 五篇共 424 页完成全文文字阅读及 59 页关键原图核对；A 题目录只有一篇。逐篇卡片区分原文事实、解释、迁移建议与可见不足，给出官网链接和页码。
+
+本仓库提供原创提炼与卡片，不包含官方论文原图、全文 OCR、派生 PDF、用户题面或本机运行日志。卡片中的 `papers/`、`manifest.json` 等反引号路径指学习项目的本地归档，不是本仓库的运行依赖。论文报告值未在本仓库复现，不将官方展示自动称为某一奖项等级。
+
+模型、客户端和竞赛规则会变化；使用前按当前环境核验。Max／Ultra 的分工是工作策略，不是质量对比实验结论。
