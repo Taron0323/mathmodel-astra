@@ -131,6 +131,70 @@ def main():
     check("raw_input_preserved", digest(main / "input/transport.json") == before_raw,
           "main/input/transport.json SHA-256 unchanged across initialization, run, resume and repeat")
 
+    for name in ("empty-checks", "partial-checks", "changed-summary", "duplicate-check", "invalid-residual"):
+        publication = root / ("publication-" + name)
+        shutil.copytree(main, publication)
+        rows = transport_demo.load_csv(publication, "evidence/validation.csv")
+        if name == "changed-summary":
+            summary = transport_demo.load_csv(publication, "results/summary.csv")
+            summary[0]["objective"] = 1
+            transport_demo.write_csv(publication / "results/summary.csv", summary)
+        else:
+            fields = list(rows[0])
+            if name == "empty-checks":
+                rows = []
+            elif name == "partial-checks":
+                rows = rows[:1]
+            elif name == "duplicate-check":
+                rows[-1] = rows[0].copy()
+            else:
+                rows[0]["observed_residual"] = "NaN"
+            transport_demo.write_csv(publication / "evidence/validation.csv", rows, fields)
+            if name in ("partial-checks", "duplicate-check", "invalid-residual"):
+                record = read(publication / transport_demo.VALIDATION_STATE)
+                record["files"]["evidence/validation.csv"] = digest(publication / "evidence/validation.csv")
+                json_write(publication / transport_demo.VALIDATION_STATE, record)
+        outputs = ("result.md", "evidence/claims.csv", "figures/transport.png", "figures/transport.svg")
+        before_publication = {name: (digest(publication / name), (publication / name).stat().st_mtime_ns) for name in outputs}
+        rejected = []
+        for action in (transport_demo.report, transport_demo.plot):
+            try:
+                action(publication)
+                rejected.append(False)
+            except ValueError:
+                rejected.append(True)
+        check("publication_rejects_" + name.replace("-", "_"), all(rejected)
+              and before_publication == {name: (digest(publication / name), (publication / name).stat().st_mtime_ns) for name in outputs},
+              "publication-" + name + ": report and plot reject invalid/stale evidence before overwriting existing artifacts")
+
+    failed_validation = root / "publication-failed-revalidation"
+    shutil.copytree(main, failed_validation)
+    original_summary = (failed_validation / "results/summary.csv").read_bytes()
+    rows = transport_demo.load_csv(failed_validation, "results/summary.csv")
+    rows[0]["objective"] = 1
+    transport_demo.write_csv(failed_validation / "results/summary.csv", rows)
+    try:
+        transport_demo.validate(failed_validation)
+    except RuntimeError:
+        pass
+    (failed_validation / "results/summary.csv").write_bytes(original_summary)
+    revoked = read(failed_validation / transport_demo.VALIDATION_STATE)["status"] == "FAIL"
+    try:
+        transport_demo.report(failed_validation)
+        revoked = False
+    except ValueError:
+        pass
+    check("failed_revalidation_revokes_publication", revoked,
+          "A failed validation writes FAIL state; restoring only the old CSV does not restore publication permission")
+    transport_demo.validate(failed_validation)
+    evidence_files = (*transport_demo.VALIDATION_SOURCES, *transport_demo.VALIDATION_ARTIFACTS, transport_demo.VALIDATION_STATE)
+    evidence_before = {name: (digest(failed_validation / name), (failed_validation / name).stat().st_mtime_ns) for name in evidence_files}
+    transport_demo.report(failed_validation)
+    transport_demo.plot(failed_validation)
+    check("publication_reuses_current_validation", evidence_before == {
+        name: (digest(failed_validation / name), (failed_validation / name).stat().st_mtime_ns) for name in evidence_files},
+        "Current evidence permits report and plot without solving again or rewriting validation")
+
     changed = root / "changed-input"
     execute("transport_demo.py", "init", "--workspace", changed)
     runner(changed)

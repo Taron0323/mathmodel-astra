@@ -23,6 +23,10 @@ python <skill>/scripts/run_workflow.py status --manifest <demo>/workflow.json
 
 检查点在 `.workflow/checkpoint.json`，运行元数据和日志在 `.workflow/runs/` 与 `.workflow/logs/`。失效结果移至 `.workflow/stale/`，不得作为当前结论。`BLOCKED_MISSING_INPUT` 不生成替代数据；`PAUSED_AT_CHECKPOINT` 可直接 resume；`INTERRUPTED` 保留已完成阶段；仍存活的父/子进程会阻止并发续跑，先核实进程。
 
+运输演练的 `validate` 另写 `evidence/validation-state.json`，关联数据、验收预设、结果 CSV、检查表、枚举证据和当前实现的哈希。`plot` 与 `report` 即使单独调用，也要求完整、有限、通过且版本匹配的检查记录；失败重验会使旧通过状态失效。证据不变时只核对记录与哈希，不重新求解。哈希用于核对文件版本，不能认证来源不明的第三方记录。
+
+升级前的演练清单若没有上述状态文件，应将它加入 `validate.outputs` 和 `plot/report.inputs`，并补齐后两阶段使用的输入、验收和枚举文件；`report.inputs` 同时登记 PNG/SVG。可以对照新目录 `init` 生成的清单更新，保留旧清单与验收证据。旧清单没有登记的依赖不在运行器的缓存检查范围内，不能把其 `all_current` 当作新增发布检查已覆盖。
+
 行为验收：`python <skill>/scripts/verify_runtime.py --workspace <项目>/practice/<新验收目录>`。使用 `--help` 核对当前版本接口。应检查缺数据、真实进程中断、恢复、复用、输入变化、输出损坏和不覆盖输入，而非仅匹配日志中的 PASS 字样。
 
 线性规划和混合整数线性规划的最终方案可接入 [verify_linear_solution.py](linear-solutions.md)，独立复算约束、变量域和目标值。它只依赖标准库，作为输出报告的核验阶段加入清单即可；通过可行性检查不等于证明最优性。

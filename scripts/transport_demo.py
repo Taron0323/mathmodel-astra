@@ -9,7 +9,12 @@ from pathlib import Path
 import numpy as np
 from scipy.optimize import linprog
 
-from run_workflow import digest, json_write
+from run_workflow import digest, json_write, stamp
+
+
+VALIDATION_SOURCES = ("input/transport.json", "input/acceptance.json", "results/allocation.csv", "results/summary.csv")
+VALIDATION_ARTIFACTS = ("evidence/validation.csv", "evidence/enumeration.json")
+VALIDATION_STATE = "evidence/validation-state.json"
 
 
 def write_csv(path, rows, fields=None):
@@ -95,10 +100,9 @@ def init(root, missing=False):
     definitions = [
         ("audit", ["input/transport.json", "input/acceptance.json"], ["clean/audit.json"]),
         ("solve", ["input/transport.json", "clean/audit.json"], ["results/allocation.csv", "results/summary.csv", "results/solver.json"]),
-        ("validate", ["input/transport.json", "input/acceptance.json", "results/allocation.csv", "results/summary.csv"],
-         ["evidence/validation.csv", "evidence/enumeration.json"]),
-        ("plot", ["results/allocation.csv", "results/summary.csv", "evidence/validation.csv"], ["figures/transport.png", "figures/transport.svg"]),
-        ("report", ["input/transport.json", "results/summary.csv", "evidence/validation.csv", "figures/transport.svg"],
+        ("validate", list(VALIDATION_SOURCES), [*VALIDATION_ARTIFACTS, VALIDATION_STATE]),
+        ("plot", [*VALIDATION_SOURCES, *VALIDATION_ARTIFACTS, VALIDATION_STATE], ["figures/transport.png", "figures/transport.svg"]),
+        ("report", [*VALIDATION_SOURCES, *VALIDATION_ARTIFACTS, VALIDATION_STATE, "figures/transport.png", "figures/transport.svg"],
          ["result.md", "evidence/claims.csv", "evidence/ai-use.json"]) ]
     json_write(root / "workflow.json", {"version": 1, "mode": "SYNTHETIC_PRACTICE",
         "packages": ["numpy", "scipy", "matplotlib"],
@@ -150,9 +154,53 @@ def load_csv(root, name):
         return list(csv.DictReader(stream))
 
 
+def validation_hashes(root, names):
+    return {name: digest(root / name) for name in names}
+
+
+def require_validation(root):
+    record = read_json(root, VALIDATION_STATE)
+    if record.get("status") != "PASS" or record.get("code_sha256") != digest(__file__):
+        raise ValueError("Publication requires successful validation by the current code")
+    names = (*VALIDATION_SOURCES, *VALIDATION_ARTIFACTS)
+    if record.get("files") != validation_hashes(root, names):
+        raise ValueError("Validation evidence is stale; inputs, results or checks changed")
+    checks = load_csv(root, "evidence/validation.csv")
+    expected = read_json(root, "input/acceptance.json")["checks"]
+    actual = [row["check_id"] for row in checks]
+    if not expected or len(set(expected)) != len(expected) or len(actual) != len(expected) or set(actual) != set(expected):
+        raise ValueError("Publication requires every preregistered check exactly once")
+    for row in checks:
+        residual, tolerance = float(row["observed_residual"]), float(row["tolerance"])
+        if (row["status"] != "PASS" or not np.isfinite(residual) or not np.isfinite(tolerance)
+                or not 0 <= residual <= tolerance):
+            raise ValueError("Publication requires finite passing residuals: " + row["check_id"])
+    return checks
+
+
 def validate(root):
+    record = {"status": "RUNNING", "started_at": stamp(), "code_sha256": digest(__file__),
+              "validation_actor": "AUTOMATED_CODE", "human_validation": "NOT_PERFORMED"}
+    json_write(root / VALIDATION_STATE, record)
+    try:
+        inputs = validation_hashes(root, VALIDATION_SOURCES)
+        validate_results(root)
+        if inputs != validation_hashes(root, VALIDATION_SOURCES):
+            raise ValueError("Validation inputs changed during evaluation")
+        record.update(status="PASS", files={**inputs, **validation_hashes(root, VALIDATION_ARTIFACTS)})
+    except Exception as exc:
+        record.update(status="FAIL", error=type(exc).__name__ + ": " + str(exc))
+        raise
+    finally:
+        record["finished_at"] = stamp()
+        json_write(root / VALIDATION_STATE, record)
+
+
+def validate_results(root):
     value, supply, demand, cost = instance(root)
     tolerance = read_json(root, "input/acceptance.json")["absolute_tolerance"]
+    if not np.isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("Validation requires a finite positive preregistered tolerance")
     rows = load_csv(root, "results/allocation.csv")
     expected_routes = [(warehouse, destination) for warehouse in value["warehouses"]
                        for destination in value["destinations"]]
@@ -216,6 +264,7 @@ def validate(root):
 
 
 def plot(root):
+    require_validation(root)
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -225,8 +274,6 @@ def plot(root):
     allocation = np.array([float(row["quantity_crate"]) for row in rows]).reshape(2, 3)
     warehouses = list(dict.fromkeys(row["warehouse"] for row in rows))
     destinations = list(dict.fromkeys(row["destination"] for row in rows))
-    if any(row["status"] != "PASS" for row in load_csv(root, "evidence/validation.csv")):
-        raise ValueError("Figure publication requires passing mathematical validation")
     plt.rcParams.update({"font.size": 11, "axes.spines.top": False, "axes.spines.right": False,
                          "svg.hashsalt": "mathmodel-astra-transport-demo"})
     fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.0), layout="constrained", gridspec_kw={"width_ratios": [1.5, 1]})
@@ -251,11 +298,9 @@ def plot(root):
 
 
 def report(root):
+    checks = require_validation(root)
     _, supply, demand, _ = instance(root)
     row = load_csv(root, "results/summary.csv")[0]
-    checks = load_csv(root, "evidence/validation.csv")
-    if any(check["status"] != "PASS" for check in checks):
-        raise ValueError("Result prose requires passing validation")
     objective, baseline = float(row["objective"]), float(row["baseline_objective"])
     text = ("# 合成运输问题演练\n\n"
             "证据类别：SYNTHETIC_PRACTICE。此例用于验证科研辅助流程，不是 2025 年论文复现，也不是正式赛题答案。\n\n"
