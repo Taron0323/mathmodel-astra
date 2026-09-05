@@ -131,6 +131,40 @@ def main():
     check("raw_input_preserved", digest(main / "input/transport.json") == before_raw,
           "main/input/transport.json SHA-256 unchanged across initialization, run, resume and repeat")
 
+    report_text = (main / "result.md").read_text(encoding="utf-8")
+    reported_routes = [tuple(cell.strip() for cell in line.split("|")[1:-1])
+                       for line in report_text.splitlines() if line.startswith("| W")]
+    allocation_rows = transport_demo.load_csv(main, "results/allocation.csv")
+    check("report_table_matches_allocation", len(reported_routes) == len(allocation_rows)
+          and all(value != "-0" for cells in reported_routes for value in cells[2:])
+          and all((cells[0], cells[1]) == (row["warehouse"], row["destination"])
+                  and [float(value) for value in cells[2:]] == [float(row[key]) for key in ("quantity_crate", "unit_cost", "cost")]
+                  for cells, row in zip(reported_routes, allocation_rows)),
+          "The six report rows preserve each route, quantity, unit cost and line cost from the verified allocation CSV")
+
+    zero_baseline = root / "zero-baseline"
+    execute("transport_demo.py", "init", "--workspace", zero_baseline)
+    zero_data = read(zero_baseline / "input/transport.json")
+    zero_data["cost"] = [[0, 0, 0], [0, 0, 0]]
+    json_write(zero_baseline / "input/transport.json", zero_data)
+    runner(zero_baseline)
+    zero_summary = transport_demo.load_csv(zero_baseline, "results/summary.csv")
+    zero_prose = (zero_baseline / "result.md").read_text(encoding="utf-8")
+    check("zero_baseline_relative_saving_is_undefined", float(zero_summary[0]["objective"]) == 0
+          and float(zero_summary[0]["baseline_objective"]) == 0 and zero_summary[0]["relative_saving"] == ""
+          and "%" not in zero_prose and "相对降幅不定义" in zero_prose,
+          "A zero-cost baseline has an empty CSV ratio and no percentage in result prose; both objective values remain zero")
+    zero_summary[0]["relative_saving"] = "0"
+    transport_demo.write_csv(zero_baseline / "results/summary.csv", zero_summary)
+    try:
+        transport_demo.validate(zero_baseline)
+        defined_zero_rejected = False
+    except RuntimeError:
+        zero_validation = {row["check_id"]: row for row in transport_demo.load_csv(zero_baseline, "evidence/validation.csv")}
+        defined_zero_rejected = zero_validation["objective_recalculation"]["status"] == "FAIL"
+    check("zero_baseline_rejects_defined_percentage", defined_zero_rejected,
+          "Changing the undefined zero-baseline ratio to a numeric 0 is rejected during objective recalculation")
+
     for name in ("empty-checks", "partial-checks", "changed-summary", "duplicate-check", "invalid-residual"):
         publication = root / ("publication-" + name)
         shutil.copytree(main, publication)

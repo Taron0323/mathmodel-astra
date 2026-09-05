@@ -71,7 +71,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/run_workflow.py status --manifest practice/transport-demo/workflow.json
 ```
 
-`init` 要求新目录。生成内容包括输入与验收预设、结果 CSV、SVG/PNG、中文短文、claims 映射和运行元数据。上述合成例的最小费用为 25，顺序分配基线为 43。
+`init` 要求新目录。生成内容包括输入与验收预设、结果 CSV、SVG/PNG、中文短文、claims 映射和运行元数据。短文展示逐线路方案、费用比较、枚举数量和约束偏差，数值读取自验证通过的结果文件。上述合成例的最小费用为 25，顺序分配基线为 43；基线费用为零时，相对降幅在 CSV 中留空，正文不生成百分比。
 
 需要验证运行器行为时，在新目录执行：
 

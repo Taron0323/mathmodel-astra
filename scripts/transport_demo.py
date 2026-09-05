@@ -141,7 +141,7 @@ def solve(root):
     objective, baseline_cost = float(solution.fun), float((baseline * cost).sum())
     write_csv(root / "results/summary.csv", [{"evidence_class": "SYNTHETIC_PRACTICE", "objective": objective,
         "baseline_objective": baseline_cost, "absolute_saving": baseline_cost - objective,
-        "relative_saving": (baseline_cost - objective) / baseline_cost if baseline_cost else 0,
+        "relative_saving": (baseline_cost - objective) / baseline_cost if baseline_cost else None,
         "objective_unit": "synthetic cost unit", "total_shipped_crate": float(allocation.sum())}])
     json_write(root / "results/solver.json", {"solver": "scipy.optimize.linprog", "method": "highs", "status": solution.status,
         "message": solution.message, "iterations": int(solution.nit), "objective": objective,
@@ -152,6 +152,11 @@ def solve(root):
 def load_csv(root, name):
     with (root / name).open(encoding="utf-8", newline="") as stream:
         return list(csv.DictReader(stream))
+
+
+def number_text(value):
+    value = float(value)
+    return f"{value if value else 0:g}"
 
 
 def validation_hashes(root, names):
@@ -224,17 +229,23 @@ def validate_results(root):
     calculated_baseline = float((baseline * cost).sum())
     row_unit_costs = np.array([float(row["unit_cost"]) for row in rows]).reshape(cost.shape)
     row_costs = np.array([float(row["cost"]) for row in rows]).reshape(cost.shape)
+    relative_saving = summary["relative_saving"]
+    if calculated_baseline:
+        relative_error = abs((calculated_baseline - objective) / calculated_baseline - float(relative_saving))
+        if not np.isfinite(float(relative_saving)):
+            relative_error = float("inf")
+    else:
+        relative_error = 0 if relative_saving == "" else float("inf")
     recalculation = max(abs(float((allocation * cost).sum()) - objective),
                         np.max(np.abs(row_unit_costs - cost)),
                         np.max(np.abs(row_costs - allocation * cost)),
                         abs(calculated_baseline - float(summary["baseline_objective"])),
                         abs(calculated_baseline - objective - float(summary["absolute_saving"])),
-                        abs(((calculated_baseline - objective) / calculated_baseline if calculated_baseline else 0)
-                            - float(summary["relative_saving"])),
+                        relative_error,
                         abs(allocation.sum() - float(summary["total_shipped_crate"])))
     if (not np.all(np.isfinite(row_unit_costs)) or not np.all(np.isfinite(row_costs))
             or not all(np.isfinite(float(summary[key])) for key in
-                       ("objective", "baseline_objective", "absolute_saving", "relative_saving", "total_shipped_crate"))):
+                       ("objective", "baseline_objective", "absolute_saving", "total_shipped_crate"))):
         recalculation = float("inf")
     add("objective_recalculation", recalculation, tolerance, "Require canonical routes and finite values; recalculate line unit costs, line costs, objective, baseline, absolute/relative savings and shipment total")
     add("independent_integer_enumeration", abs(exact - objective), tolerance, f"Exhaustively evaluated {count} feasible integer allocations")
@@ -301,25 +312,36 @@ def report(root):
     checks = require_validation(root)
     _, supply, demand, _ = instance(root)
     row = load_csv(root, "results/summary.csv")[0]
+    allocation = load_csv(root, "results/allocation.csv")
+    enumeration = read_json(root, "evidence/enumeration.json")
+    check_by_id = {check["check_id"]: check for check in checks}
     objective, baseline = float(row["objective"]), float(row["baseline_objective"])
+    comparison = (f"相同供需约束下，费用减少 {baseline-objective:g}，降幅为 {float(row['relative_saving'])*100:.2f}%。"
+                  if baseline else "基线费用为 0，相对降幅不定义。")
+    allocation_table = ("| 仓库 | 需求点 | 运输量（箱） | 单位费用 | 线路费用 |\n"
+                        "| --- | --- | ---: | ---: | ---: |\n"
+                        + "".join(f"| {item['warehouse']} | {item['destination']} | {number_text(item['quantity_crate'])} | "
+                                  f"{number_text(item['unit_cost'])} | {number_text(item['cost'])} |\n" for item in allocation))
     text = ("# 合成运输问题演练\n\n"
-            "证据类别：SYNTHETIC_PRACTICE。此例用于验证科研辅助流程，不是 2025 年论文复现，也不是正式赛题答案。\n\n"
+            "采用两座仓库、三个需求点的合成数据，比较线性规划与顺序分配方案的运输费用。\n\n"
             "## 模型与预先判断\n\n"
-            "以两座仓库到三个需求点的运输量为变量，最小化运输量与单位费用的乘积之和。"
+            f"总供给为 {supply.sum():g} 箱，总需求为 {demand.sum():g} 箱。"
+            "以各线路运输量为变量，最小化运输量与单位费用的乘积之和；"
             "各需求点的收货量等于需求，仓库发货量不超过库存，运输量非负。"
-            "运输量单位为箱，单位费用采用合成费用单位／箱，总费用采用合成费用单位。"
-            "线性费用、可分割货物和无额外线路容量是本例的模型假设。"
-            f"总供给为 {supply.sum():g} 箱，总需求为 {demand.sum():g} 箱；求解前已将数量级界限和 12 项验收条件写入体检记录及参数文件。\n\n"
+            "模型采用线性费用、可分割货物和无额外线路容量的假设，使用 SciPy HiGHS 求解。"
+            "单位费用以合成费用单位／箱计，总费用以合成费用单位计。\n\n"
             "## 计算结果\n\n"
-            f"SciPy HiGHS 求得模型最小费用为 {objective:g}，按仓库和需求点顺序分配的可行基线费用为 {baseline:g}。"
-            f"在相同供需约束下，费用减少 {baseline-objective:g}，相对降幅为 {float(row['relative_saving'])*100:.2f}%。"
-            "逐线路运输量见 `results/allocation.csv`，对应分配与费用比较见下图。\n\n"
+            f"线性规划的最小费用为 {objective:g}，按仓库和需求点顺序分配的可行基线费用为 {baseline:g}。"
+            + comparison + "逐线路方案如下，数值读取自 `results/allocation.csv`。\n\n"
+            + allocation_table + "\n"
             "![合成运输分配与基线费用比较](figures/transport.png)\n\n"
             "## 校验与适用范围\n\n"
-            f"{len(checks)} 项自动代码校验通过，包括供需约束、费用重算、小规模穷举对拍、零需求、供给不足、重编号和费用缩放。"
-            "整数供需的运输约束矩阵具有全幺模性质，因此此例的整数穷举最优值可与连续线性规划最优值比较。"
-            "固定输入上的正确性校验不构成实际运输效果或跨场景稳健性证据。算法未使用随机采样，重复种子检验不适用；现实场景有效性尚未评估。"
-            "人工审查尚未进行，自动校验不计作人工核验。\n")
+            f"独立穷举遍历 {enumeration['feasible_allocations']} 个可行整数方案，最小费用同为 {float(enumeration['objective']):g}。"
+            "运输约束矩阵具有全幺模性质，整数供需下存在整数最优解，故可用该穷举结果核对连续线性规划最优值。"
+            f"需求等式的最大偏差为 {float(check_by_id['demand_equality']['observed_residual']):g} 箱，"
+            f"库存超限量为 {float(check_by_id['supply_capacity']['observed_residual']):g} 箱。"
+            f"共 {len(checks)} 项自动校验通过，完整结果见 [验证记录](evidence/validation.csv)。\n\n"
+            "本例采用确定性求解与穷举检验，评价范围为上述合成数据；现实场景有效性尚未评估。人工核验尚未进行。\n")
     (root / "result.md").write_text(text, encoding="utf-8")
     write_csv(root / "evidence/claims.csv", [
         {"claim_id": "DEMO-C1", "claim": f"Declared LP optimal cost is {objective:g}", "evidence_class": "SYNTHETIC_PRACTICE",
@@ -329,7 +351,11 @@ def report(root):
         {"claim_id": "DEMO-C2", "claim": f"Savings versus declared greedy baseline: {baseline-objective:g}", "evidence_class": "SYNTHETIC_PRACTICE",
          "code": str(Path(__file__).resolve()), "code_symbols": "greedy,solve", "code_sha256": digest(__file__), "result": "results/summary.csv:row1",
          "validation": "evidence/validation.csv:baseline_feasible,baseline_dominance", "figure": "figures/transport.svg",
-         "manuscript": "result.md:计算结果", "human_review": "NOT_PERFORMED"}])
+         "manuscript": "result.md:计算结果", "human_review": "NOT_PERFORMED"},
+        {"claim_id": "DEMO-C3", "claim": f"Enumeration covers {enumeration['feasible_allocations']} feasible integer allocations with minimum {float(enumeration['objective']):g}",
+         "evidence_class": "SYNTHETIC_PRACTICE", "code": str(Path(__file__).resolve()), "code_symbols": "enumerate_integer,validate",
+         "code_sha256": digest(__file__), "result": "evidence/enumeration.json", "validation": "evidence/validation.csv:independent_integer_enumeration",
+         "figure": "", "manuscript": "result.md:校验与适用范围", "human_review": "NOT_PERFORMED"}])
     json_write(root / "evidence/ai-use.json", {"evidence_class": "SYNTHETIC_PRACTICE", "tool": "Codex",
         "purpose": "Generate deterministic helper code, run synthetic validation and draft the accompanying explanation",
         "model": "NOT_RECORDED_BY_SCRIPT", "reasoning_effort": "NOT_RECORDED_BY_SCRIPT",
