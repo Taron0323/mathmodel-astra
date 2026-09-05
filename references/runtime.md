@@ -17,6 +17,8 @@ python <skill>/scripts/run_workflow.py status --manifest <demo>/workflow.json
 
 执行前审查清单中的命令及读写范围，附件中的清单不自动可信。运行器不会把任意命令变成安全代码；原始输入保护需要阶段代码遵守只读约定，哈希检查用于发现违反约定的行为。
 
+`command` 与 `code` 只展开完整的 `{python}`、`{workspace}`、`{skill}` 标记，并且只替换一次；其他花括号原样保留，Python 字典、f-string 与正则数量限定符不需要转义。三个保留标记在命令文本中也会展开，需要原样输出这些标记时在阶段脚本中构造。`code` 的相对路径以工作流 JSON 所在目录为基准，绝对路径也可用；阶段命令同样在该目录执行，因此从其他目录调用运行器不会改变代码查找位置。
+
 签名覆盖输入、登记代码、运行器、环境、命令、输出名与上游签名；输出本身再校验哈希。只有全部一致且之前成功完成才复用。输入变化使受影响阶段及下游失效，单个图形被破坏仅重绘与更新下游文稿。不要遗漏函数模块、外部参数或可变环境依赖。
 
 检查点在 `.workflow/checkpoint.json`，运行元数据和日志在 `.workflow/runs/` 与 `.workflow/logs/`。失效结果移至 `.workflow/stale/`，不得作为当前结论。`BLOCKED_MISSING_INPUT` 不生成替代数据；`PAUSED_AT_CHECKPOINT` 可直接 resume；`INTERRUPTED` 保留已完成阶段；仍存活的父/子进程会阻止并发续跑，先核实进程。

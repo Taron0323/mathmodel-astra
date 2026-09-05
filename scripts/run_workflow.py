@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import signal
 import subprocess
@@ -53,6 +54,10 @@ def load_manifest(path):
     root = path.parent.resolve()
     resource_root = Path(__file__).resolve().parent.parent
     tokens = {"python": sys.executable, "workspace": str(root), "skill": str(resource_root)}
+
+    def expand(value):
+        return re.sub(r"\{(python|workspace|skill)\}", lambda match: tokens[match.group(1)], value)
+
     stages = manifest["stages"]
     if not isinstance(stages, list) or not stages:
         raise ValueError("A workflow must contain at least one stage")
@@ -74,8 +79,8 @@ def load_manifest(path):
             if name in producers or name in stage["inputs"]:
                 raise ValueError("Outputs must have one producer and cannot overwrite an input")
             producers[name] = key
-        stage["command"] = [part.format(**tokens) for part in stage["command"]]
-        stage["code"] = [part.format(**tokens) for part in stage.get("code", [])]
+        stage["command"] = [expand(part) for part in stage["command"]]
+        stage["code"] = [str((root / expand(part)).resolve()) for part in stage.get("code", [])]
     available = set()
     for stage in stages:
         for name in stage["inputs"]:

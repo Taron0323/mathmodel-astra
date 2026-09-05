@@ -78,6 +78,16 @@ python3 -m venv .venv
 .venv/bin/python scripts/verify_runtime.py --workspace practice/runtime-validation
 ```
 
+命令与代码路径只展开 `{python}`、`{workspace}`、`{skill}` 三个保留标记，其他花括号保持原样。相对 `code` 路径从工作流 JSON 所在目录解析，支持从其他目录启动；详见[运行接口](references/runtime.md)。
+
+运行不需要科学计算依赖的可移植性回归测试：
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归测试和完整运行行为验收。实际状态见仓库 Actions；本地通过不代表远端检查已完成。
+
 发布前本地记录为 23 项运行行为检查通过、主示例 12 项数学检查通过。检查覆盖缺数据、真实中断与恢复、旧结果复用、输入或代码变化、归档保留及错误结果拦截。污染样例中的 FAIL 是预期拒绝，不等于主流程失败。这些结果只验证对应合成例和运行流程，不证明任意赛题的科学正确性。
 
 ## 论文来源
