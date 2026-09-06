@@ -24,13 +24,19 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-          cache-dependency-path: requirements-demo.txt
-      - run: python -m pip install -r requirements-demo.txt
+          cache-dependency-path: |
+            requirements-demo.txt
+            requirements-prediction.txt
+      - run: python -m pip install -r requirements-prediction.txt
       - run: python -m unittest discover -s tests -v
       - run: python scripts/verify_runtime.py --workspace practice/ci-runtime
+      - run: python -m unittest discover -s tests/prediction -v
+      - run: python scripts/grouped_prediction_demo.py run --workspace practice/ci-prediction
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: runtime-${{ matrix.os }}-${{ matrix.python }}
-          path: practice/ci-runtime/
+          path: |
+            practice/ci-runtime/
+            practice/ci-prediction/
           include-hidden-files: true

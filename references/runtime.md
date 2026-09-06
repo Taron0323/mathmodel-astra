@@ -33,4 +33,6 @@ python <skill>/scripts/run_workflow.py status --manifest <demo>/workflow.json
 
 线性规划和混合整数线性规划的最终方案可接入 [verify_linear_solution.py](linear-solutions.md)，独立复算约束、变量域和目标值。它只依赖标准库，作为输出报告的核验阶段加入清单即可；通过可行性检查不等于证明最优性。
 
+预测划分演练使用 `grouped_prediction_demo.py run --workspace <项目>/practice/<新目录>`，依赖 numpy、scikit-learn、matplotlib。它生成具有重复观测的合成数据，比较记录与个体划分；`render` 仅复用当前有效证据绘图和生成说明。它是单独的固定反例脚本，没有运输运行器的分阶段恢复接口。预测目标、输出与命令详见 [预测验证](prediction-validation.md)。
+
 运行器成功意味着命令退出和输出完整性通过。是否科学有效由该阶段具体的数学验证程序和队员核验决定，不能以运行器 COMPLETE 替代。

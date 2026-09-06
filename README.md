@@ -54,6 +54,7 @@ $mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继
 | [references/exemplars/synthesis.md](references/exemplars/synthesis.md) | 2025 年 CUMCM 论文学习与五张范例卡 |
 | [references/runtime.md](references/runtime.md) | 脚本接口、依赖与运行范围 |
 | [references/linear-solutions.md](references/linear-solutions.md) | 最终线性方案、取整与费用核对，附可运行接口和反例 |
+| [references/prediction-validation.md](references/prediction-validation.md) | 预测对象、分组与时间划分、训练内预处理及重复观测反例 |
 
 其他按需参考从 `SKILL.md` 路由进入。
 
@@ -87,7 +88,7 @@ python3 -m venv .venv
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归测试和完整运行行为验收。实际状态见仓库 Actions；本地通过不代表远端检查已完成。
+GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归测试、完整运输运行行为验收和预测划分演练。实际状态见仓库 Actions；本地通过不代表远端检查已完成。
 
 完整运输演练检查缺数据、真实中断与恢复、旧结果复用、输入或代码变化、归档保留、错误结果拦截和图文发布证据。主示例含 12 项数学检查；当前行为检查数量以 `runtime-summary.json` 为准。污染样例中的 FAIL 是预期拒绝，不等于主流程失败。这些结果只验证对应合成例和运行流程，不证明任意赛题的科学正确性。
 
@@ -98,6 +99,21 @@ GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归
 `scripts/verify_linear_solution.py` 从独立登记的线性模型和最终解 JSON 复算约束、变量上下界、整数/二元域与目标值，适用于 LP/MILP 求解后以及取整、裁剪等后处理之后。只依赖标准库；提供输入哈希和逐项残差，区分可行性、费用一致性与尚未核验的最优性。
 
 完整模型格式、命令和“连续解取整后不可行”的合成例见[最终方案核验](references/linear-solutions.md)。模型语义仍需对题面核对，非线性与逻辑约束需使用相应检查。
+
+## 检查预测划分
+
+预测新个体、已知个体的未来观测和未来新个体需要不同的评估划分。新增的[预测验证参考](references/prediction-validation.md)将目标对象、信息时点、训练内预处理、指标权重与验收记录对应起来。
+
+合成演练采用相同的单近邻模型比较记录随机五折与个体隔离五折，每折重新拟合模型和标准化器，同时报告多数类基线。输入包含 256 个个体的 1024 条重复记录，标签独立随机生成；图中的高准确率对应测试记录与训练记录共享个体的条件。
+
+```sh
+.venv/bin/python -m pip install -r requirements-prediction.txt
+.venv/bin/python scripts/grouped_prediction_demo.py run --workspace practice/grouped-prediction
+.venv/bin/python scripts/grouped_prediction_demo.py render --workspace practice/grouped-prediction
+.venv/bin/python -m unittest discover -s tests/prediction -v
+```
+
+`run` 要求新目录，保存各折索引、每条预测、指标、验证记录及图文；`render` 复用未变化的有效证据，不重新训练。该例用于检查重复观测的评价边界，不代表真实赛题性能或官方论文复现。科学计算依赖仅在运行对应演练或测试时需要。
 
 ## 论文来源
 
