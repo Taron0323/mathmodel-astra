@@ -56,6 +56,8 @@ $mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继
 | [references/linear-solutions.md](references/linear-solutions.md) | 最终线性方案、取整与费用核对，附可运行接口和反例 |
 | [references/prediction-validation.md](references/prediction-validation.md) | 预测对象、分组与时间划分、训练内预处理及重复观测反例 |
 | [references/parameter-identifiability.md](references/parameter-identifiability.md) | 参数反演、尺度、局部秩与条件数、剖面分析和可运行诊断 |
+| [docs/mathmodel-astra-guide.md](docs/mathmodel-astra-guide.md) | 面向人类阅读的完整流程、题型路由、赛区边界与运行示例 |
+| [docs/mathmodel-astra-evaluation.md](docs/mathmodel-astra-evaluation.md) | 已验证能力、当前限制与分优先级优化建议 |
 
 其他按需参考从 `SKILL.md` 路由进入。
 
