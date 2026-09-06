@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "policy_version": "2026-09-07",
+  "kind": "RECOMMENDATION_AND_RECORD_TEMPLATE",
+  "auto_applied": false,
+  "runtime_consumer": null,
+  "global_configuration_mutation": false,
+  "capability_source_ids": ["OPENAI-ASTRA-API", "OPENAI-CODEX-MODES"],
+  "roles": {
+    "execution": {
+      "preferred_model": "gpt-6-astra",
+      "preferred_client_effort": "max",
+      "preferred_api_effort": "max",
+      "fallback_effort_order": ["xhigh", "high", "medium", "low"]
+    },
+    "critical_design": {
+      "preferred_model": "gpt-6-astra",
+      "preferred_client_effort": "ultra",
+      "preferred_api_effort": "max",
+      "fallback_effort_order": ["max", "xhigh", "high", "medium", "low"]
+    },
+    "independent_review": {
+      "preferred_model": "gpt-6-astra",
+      "preferred_client_effort": "ultra",
+      "preferred_api_effort": "max",
+      "fallback_effort_order": ["max", "xhigh", "high", "medium", "low"],
+      "independent_method_required": true,
+      "subagent_count_is_not_independent_validation": true
+    }
+  },
+  "fallback_rules": {
+    "filter_efforts_by_current_surface_and_model_support": true,
+    "unobservable_settings": "KEEP_CURRENT_SESSION_AND_RECORD_UNVERIFIED",
+    "unsupported_ultra": "SELECT_CONFIRMED_EFFORT_AND_RUN_CHECKS_SEQUENTIALLY",
+    "unavailable_requested_model": "USE_PREAUTHORIZED_ALTERNATIVE_OR_CONTINUE_MODEL_INDEPENDENT_WORK",
+    "preauthorized_alternative_models": [],
+    "hard_user_requirement": "RECORD_UNMET_IF_FALLBACK_USED",
+    "acceptance_criteria": "UNCHANGED"
+  },
+  "run_record_template": {
+    "status": "NOT_RUN",
+    "task_id": null,
+    "role": null,
+    "recorded_at": null,
+    "surface": null,
+    "provider_reported_by_host": "UNVERIFIED",
+    "client_version": "UNVERIFIED",
+    "requested_model": null,
+    "requested_effort": null,
+    "capability_observation": {
+      "status": "UNVERIFIED",
+      "source": null,
+      "observed_at": null,
+      "supported_models": null,
+      "supported_efforts_for_requested_model": null
+    },
+    "observed_model": "UNVERIFIED",
+    "observed_effort": "UNVERIFIED",
+    "fallback_reason": null,
+    "hard_requirement_satisfied": null,
+    "execution_evidence": null,
+    "independent_validation_evidence": null,
+    "human_validation": "NOT_PERFORMED"
+  }
+}

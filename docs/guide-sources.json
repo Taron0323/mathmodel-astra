@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "guide": "docs/mathmodel-astra-guide.md",
+  "sections": {
+    "1. 定位与适用范围": [
+      "SKILL.md"
+    ],
+    "2. 进入项目与任务范围": [
+      "SKILL.md",
+      "references/workflow.md"
+    ],
+    "3. 全流程与阶段验收": [
+      "references/workflow.md"
+    ],
+    "4. 按数学结构选择方法": [
+      "references/problem-types.md",
+      "references/capabilities.md"
+    ],
+    "5. 数据、结论与证据合同": [
+      "references/evidence-contract.md"
+    ],
+    "6. 数学和计算验证": [
+      "references/verification.md",
+      "references/linear-solutions.md",
+      "references/prediction-validation.md",
+      "references/parameter-identifiability.md",
+      "references/ode-validation.md"
+    ],
+    "7. 图表、正文与论文学习": [
+      "references/figures.md",
+      "references/writing.md",
+      "references/literature.md",
+      "references/exemplars/synthesis.md"
+    ],
+    "8. 模型、并行与恢复": [
+      "references/astra-modes.md",
+      "references/model-policy.json",
+      "references/workflow.md"
+    ],
+    "9. 脚本与可运行示例": [
+      "references/runtime.md",
+      "README.md"
+    ],
+    "10. 比赛规则与交付": [
+      "references/competition.md",
+      "references/sources.json"
+    ],
+    "11. 可直接调用的提示词": [
+      "SKILL.md"
+    ],
+    "12. 来源索引": [
+      "scripts/check_docs.py"
+    ]
+  },
+  "review_actor": "AI_ASSISTANT",
+  "scope": "Source freshness, not semantic or human approval",
+  "sha256": {
+    "README.md": "7c4c854783d4f154dc989716c3964a999619d0577d9a0cbdbcbfe6f6fd699e90",
+    "SKILL.md": "90ed8475271608f736617a7bd22053e12d5009aaac9dc31ede1f3d464aeabef7",
+    "docs/mathmodel-astra-guide.md": "15c36ee7ade4df934017fac26a66dbf87313ee2eb3ae7472824a01e2d5c850ef",
+    "references/astra-modes.md": "00229118fd9b7a3ff0accd531cf498116f53dd7a8ec31ba88780cb8bed5bad6f",
+    "references/capabilities.md": "fc6b9a576a94e48d68282a6c9c7554a4c3454e45329a65a56c7b81c05576cf73",
+    "references/competition.md": "f40f10e04f699417f342dce84149794e1e612270bf829f79190460571b852435",
+    "references/evidence-contract.md": "1d28d79286b485dfbc0bdf78d6d3bea8b61470a07d5ba1ba0112d31121661dce",
+    "references/exemplars/synthesis.md": "fc403b7132d6a564586220f5d3ca25d948391c7f53d450db3147477eca0c7b07",
+    "references/figures.md": "7580b55e61ab41545aecf4c39f590969b70c150308a11e3830a617ec5b8c803d",
+    "references/linear-solutions.md": "beed9983eac3ed0547dd7a8ef1a6946533dc6db0352bc7100bb90f67f12a8a78",
+    "references/literature.md": "b583bf78f25a181456ce13975a416b02db76f479264217ab58a46a07130de724",
+    "references/model-policy.json": "23ef20c152429ff65829540fb91739ec10a421c45ead50e697913cb5dc506e87",
+    "references/ode-validation.md": "2eed2f644fc07a22da2a0e8e4670d971ba8fb5e8fc7f7e7498fec7cebbcc7c01",
+    "references/parameter-identifiability.md": "190609d579fc61bc0276d18972f5de8f7b0844df3df8c0c18bc74c66e4f6476a",
+    "references/prediction-validation.md": "e7d3a6bd6bc49cb7251b3aff2b7b097fca27477c47f70c60943d33e6801a0a20",
+    "references/problem-types.md": "7dc0884c2249455ff4b0d96f63dadfa7833fc055730e6abaa1cbb14aeeabac17",
+    "references/runtime.md": "0e8bdc3ae0ba2c86c95b4474cc094c5ae1766d39de06e8c46b5bb776cd2ebfe0",
+    "references/sources.json": "dab89c58833802792886d8947e8f9066bbd3b648945e86ba0b74c3d6bfa40e5d",
+    "references/verification.md": "e52ba8a4e31f48081ff9a04a457401d3a1f3b2859f06888f924e7e462c46629b",
+    "references/workflow.md": "512e998baf3b422c9fd9dd935dd51e09b08246b2447da66061efbe4ea98499cb",
+    "references/writing.md": "17c68cb21e78f14f7105584fb0ac7fb0bf79903dcc478fa2b5b9d382e0f588a3",
+    "scripts/check_docs.py": "2a02f21a4467057d8fc2b04aa233ac54e254a223d4bce2f5b147d05447bb1f85"
+  }
+}

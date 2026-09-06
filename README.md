@@ -4,13 +4,30 @@
 
 ## 安装
 
-使用已登录的 GitHub CLI 将本仓库克隆到个人技能目录：
+公开仓库可直接通过 Git 安装，无需登录 GitHub：
+
+```sh
+git clone https://github.com/Taron0323/mathmodel-astra.git "$HOME/.agents/skills/mathmodel-astra"
+```
+
+已配置 GitHub CLI 时也可使用：
 
 ```sh
 gh repo clone Taron0323/mathmodel-astra ~/.agents/skills/mathmodel-astra
 ```
 
 目标目录已有同名 Skill 时，先比较并备份已有版本；克隆命令不会覆盖非空目录。重新打开 Codex 会话，在技能列表中确认 `mathmodel-astra` 可用。使用此 Skill 本身无需运行运输演练或安装科学计算库。
+
+升级前记录当前提交并确认工作区没有本地修改。以下命令用于跟随 `main` 的干净 Git 安装；手动复制的目录先比较文件，不直接套用 Git 升级：
+
+```sh
+git -C "$HOME/.agents/skills/mathmodel-astra" status --short
+git -C "$HOME/.agents/skills/mathmodel-astra" rev-parse HEAD
+git -C "$HOME/.agents/skills/mathmodel-astra" fetch origin
+git -C "$HOME/.agents/skills/mathmodel-astra" merge --ff-only origin/main
+```
+
+需要固定版本或回滚时，在干净安装目录执行 `git switch --detach <已核实的提交>`。保留升级前记录的提交；有本地改动时先另行备份并核对差异。回滚 Skill 不会回滚项目数据，旧计算证据是否可复用仍须检查输入、代码和环境版本。
 
 ## 调用
 
@@ -56,6 +73,10 @@ $mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继
 | [references/linear-solutions.md](references/linear-solutions.md) | 最终线性方案、取整与费用核对，附可运行接口和反例 |
 | [references/prediction-validation.md](references/prediction-validation.md) | 预测对象、分组与时间划分、训练内预处理及重复观测反例 |
 | [references/parameter-identifiability.md](references/parameter-identifiability.md) | 参数反演、尺度、局部秩与条件数、剖面分析和可运行诊断 |
+| [references/capabilities.md](references/capabilities.md) | 各题型的方法、脚本、独立验证与历史题覆盖层级 |
+| [references/ode-validation.md](references/ode-validation.md) | 有解析解的动态系统、守恒与步长收敛演练 |
+| [references/sources.json](references/sources.json) | 竞赛条款及模型支持项的来源、日期、定位与核验范围 |
+| [references/model-policy.json](references/model-policy.json) | 按任务角色记录模型偏好与可用性回退，不修改宿主设置 |
 | [docs/mathmodel-astra-guide.md](docs/mathmodel-astra-guide.md) | 面向人类阅读的完整流程、题型路由、赛区边界与运行示例 |
 | [docs/mathmodel-astra-evaluation.md](docs/mathmodel-astra-evaluation.md) | 已验证能力、当前限制与分优先级优化建议 |
 
@@ -63,7 +84,7 @@ $mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继
 
 ## 运行合成演练
 
-通用运行器只依赖 Python 标准库。运输演练需要 Python 3.10+、NumPy、SciPy 和 Matplotlib；进程中断与超时使用 POSIX 信号，实际验证平台为 macOS，Windows 原生行为尚未验证。
+通用运行器只依赖 Python 标准库。运输演练需要 Python 3.10+、NumPy、SciPy 和 Matplotlib；进程中断与超时使用 POSIX 信号，已有 Linux/macOS CI 验证，Windows 原生行为尚未验证。
 
 在仓库根目录执行：
 
@@ -138,3 +159,21 @@ GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归
 本仓库提供原创提炼与卡片，不包含官方论文原图、全文 OCR、派生 PDF、用户题面或本机运行日志。卡片中的 `papers/`、`manifest.json` 等反引号路径指学习项目的本地归档，不是本仓库的运行依赖。论文报告值未在本仓库复现，不将官方展示自动称为某一奖项等级。
 
 模型、客户端和竞赛规则会变化；使用前按当前环境核验。Max／Ultra 的分工是工作策略，不是质量对比实验结论。
+
+## 动态系统与行为评测
+
+双室转移演练使用 RK23 求解，以解析解、DOP853、守恒和两个退化实例核验结果。绘图阶段只读有效证据：
+
+```sh
+.venv/bin/python scripts/ode_demo.py init --workspace practice/ode-demo
+.venv/bin/python scripts/run_workflow.py run --manifest practice/ode-demo/workflow.json
+.venv/bin/python scripts/run_workflow.py status --manifest practice/ode-demo/workflow.json
+```
+
+该例依赖 `requirements-demo.txt`。支持边界与十项验收见 [ODE 验证](references/ode-validation.md)；相关误差传播、统计区间和真实历史题复现仍分别记录，不能由本例通过推断。
+
+实际代理的单阶段边界、目录适配、续接、输入保护与信息处理案例见 [行为评测](evals/behavior/README.md)。它使用隔离文件与真实运行记录，和 CI 中的确定性脚本测试分开。一次运行不构成跨模型效果或重复稳定性的证据。
+
+## 维护文档
+
+规范入口为 `SKILL.md` 与按需参考。完整人类手册通过 [来源映射](docs/guide-sources.json) 记录各节对应规范的哈希，CI 执行 `python scripts/check_docs.py check`。源文件变化后先审阅对应段落，再执行 `python scripts/check_docs.py record` 更新映射。该检查发现来源漂移，不代替语义审查；长手册不需要整份加载到每次 Skill 任务。

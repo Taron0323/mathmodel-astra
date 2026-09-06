@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "index_version": "2026-09-07",
+  "retrieved_on": "2026-09-07",
+  "timezone": "Asia/Shanghai",
+  "scope": "CUMCM 2026 national rules and OpenAI model documentation used by this Skill",
+  "hash_algorithm": "SHA-256",
+  "quote_normalization": "Chinese HTML entities are decoded; PDF line wraps and layout-only spaces are removed. English connector excerpts join wrapped lines with spaces.",
+  "refresh_triggers": [
+    "competition year, group, region or applicable school changes",
+    "official amendment or source hash changes",
+    "formal task intake and final submission rule check",
+    "model, provider, sign-in method or client changes"
+  ],
+  "limitations": [
+    "This is a dated source index, not a complete search for every later amendment.",
+    "Regional and school rules, account actions, signatures and actual submission were not verified.",
+    "The four CUMCM PDF hashes match the prior 2026-09-05 UTC snapshot; only the three rule documents were reread for clauses in this check.",
+    "OpenAI documentation was fetched through the official documentation connector. Direct .md retrieval timed out for Models and returned HTTP 403 for Astra; these failures are not treated as document unavailability.",
+    "Documentation availability does not verify account entitlement or a completed model run."
+  ],
+  "sources": [
+    {
+      "id": "CUMCM-2026-AI",
+      "title": "全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）",
+      "publisher": "全国大学生数学建模竞赛组委会",
+      "published_date": "2026-08-03",
+      "published_date_locator": "official HTML article timestamp",
+      "effective_from": "2026-09-01",
+      "url": "https://www.mcm.edu.cn/html_cn/node/fef94648f2836ab6cc81586f4c38512b.html",
+      "document_url": "https://www.mcm.edu.cn/upload_cn/node/785/Glps6mBh6563c55c45300fede72ddbf6eb33d3a8.pdf",
+      "sha256": "4cf6f30cdd37d6ef2cdb3439c5dba4d9f207c12d6aafe24419e81f3c69acf59a",
+      "hash_scope": "downloaded PDF bytes",
+      "html_sha256": "5b80b9b932cac141f72d3b3932f82de0f5c5371180b7c471dab4f2028590af58",
+      "verification_status": "VERIFIED_CONTENT_AND_HASH",
+      "verification_method": "anonymous HTTPS 200; HTML clauses and PDF page 1 text checked; SHA-256 matches prior snapshot",
+      "clauses": [
+        {
+          "id": "AI-2",
+          "locator": "第2条，PDF第1页；原句取官方HTML",
+          "quote": "参赛队可在竞赛期间使用AI工具，但应遵循公开透明原则，确保参赛作品的核心建模与分析由参赛队主导，并对AI参与完成的内容逐项人工审查与核实。"
+        },
+        {
+          "id": "AI-3",
+          "locator": "第3条，PDF第1页；原句取官方HTML",
+          "quote": "参赛队应在论文参考文献之前设置“AI工具使用声明”，内容如下，二者择一："
+        },
+        {
+          "id": "AI-4",
+          "locator": "第4条，PDF第1页；原句取官方HTML",
+          "quote": "使用AI工具的参赛作品，应在支撑材料中包含AI工具使用详情说明（PDF格式，文件名为“AI工具使用详情.pdf”），内容包括："
+        },
+        {
+          "id": "AI-4-4",
+          "locator": "第4条第（4）项，PDF第1页；原句取官方HTML",
+          "quote": "对AI输出的采纳、人工修改和核验的主要情况（语言润色除外）。"
+        },
+        {
+          "id": "AI-6",
+          "locator": "第6条，PDF第1页；原句取官方HTML",
+          "quote": "本规定自2026年9月1日起试行。此前相关规定与本规定不一致的，以本规定为准。"
+        }
+      ]
+    },
+    {
+      "id": "CUMCM-2026-RULES",
+      "title": "全国大学生数学建模竞赛参赛规则（2026年修订稿）",
+      "publisher": "全国大学生数学建模竞赛组委会",
+      "published_date": "2026-03-03",
+      "published_date_locator": "official HTML article timestamp",
+      "effective_from": "2026-03-01",
+      "url": "https://www.mcm.edu.cn/html_cn/node/9d8e511fe7a1447b35f53a82c908e2e0.html",
+      "document_url": "https://www.mcm.edu.cn/upload_cn/node/774/FlQt6kJV6f5d5b4603e06c3c60acf89b72d7f298.pdf",
+      "sha256": "46d3837906bfd7049eb04c40cfc8b8436912d7edae98462ba064abfa381a8d3a",
+      "hash_scope": "downloaded PDF bytes",
+      "html_sha256": "30184d8062ad4f6a7c3575fd7da89f99c78b9312e1fed58037a07982b6bfe4cd",
+      "verification_status": "VERIFIED_CONTENT_AND_HASH",
+      "verification_method": "anonymous HTTPS 200; PDF page 1 text checked; SHA-256 matches prior snapshot",
+      "clauses": [
+        {
+          "id": "RULES-3",
+          "locator": "第3条，PDF第1页",
+          "quote": "指导教师在竞赛期间不得通过任何方式对参赛学生进行任何形式的指导（包括向学生解释赛题或提供选题、解题建议，提供参考资料，修改论文或提供修改建议等），否则一律按违纪处理。"
+        },
+        {
+          "id": "RULES-5",
+          "locator": "第5条，PDF第1页",
+          "quote": "竞赛期间，参赛队员不得在任何交流平台（包括但不仅限于“贴吧”、QQ群、微信群、网络直播间、知乎、小红书、CSDN、GitHub等）浏览、发布或讨论与赛题相关的内容，否则一律视为严重违反竞赛纪律。"
+        },
+        {
+          "id": "RULES-6",
+          "locator": "第6条，PDF第1页",
+          "quote": "参赛队员可以使用人工智能（AI）工具作为辅助，但各参赛队必须对所提交作品的原创性、真实性和准确性负全部责任。"
+        }
+      ]
+    },
+    {
+      "id": "CUMCM-2026-FORMAT",
+      "title": "全国大学生数学建模竞赛论文格式规范（2026年修订稿）",
+      "publisher": "全国大学生数学建模竞赛组委会",
+      "published_date": "2026-03-03",
+      "published_date_locator": "official HTML article timestamp",
+      "effective_from": "2026-03-03",
+      "url": "https://www.mcm.edu.cn/html_cn/node/4cd596519c9eb9fbd866398f6df0caa3.html",
+      "document_url": "https://www.mcm.edu.cn/upload_cn/node/775/cQMeL0YY905244c8bd4b9af832f1699446d8385e.pdf",
+      "sha256": "cece4bb3a900a0435160032b98ea26e03b0f2d7eca58424b0d023e26085aed26",
+      "hash_scope": "downloaded PDF bytes",
+      "html_sha256": "2aa27a6c74ddc0385c924f29fac1d91ab1511f15a01042cdc2ee8a6d49293e8a",
+      "verification_status": "VERIFIED_CONTENT_AND_HASH",
+      "verification_method": "anonymous HTTPS 200; PDF pages 1 and 2 text checked; SHA-256 matches prior snapshot",
+      "clauses": [
+        {
+          "id": "FORMAT-4",
+          "locator": "第四条，PDF第1页",
+          "quote": "论文从第四页开始是正文内容（不要目录，不超过30页）；正文之后是论文附录（页数不限），附录内容必须打印并与正文装订在一起提交。"
+        },
+        {
+          "id": "FORMAT-6",
+          "locator": "第六条，PDF第1页",
+          "quote": "论文摘要专用页、正文和附录中任何地方都不能有显示参赛者身份和所在学校及赛区的信息。"
+        },
+        {
+          "id": "FORMAT-8",
+          "locator": "第八条，PDF第1页",
+          "quote": "在不违反本规范的前提下，各赛区可以对论文做相应的要求。"
+        },
+        {
+          "id": "FORMAT-10",
+          "locator": "第十条，PDF第1页",
+          "quote": "文件大小不超过20MB。注意参赛论文电子版文件不要压缩，承诺书和编号专用页不要放在电子版论文中，即电子版论文的第一页必须为摘要专用页。"
+        },
+        {
+          "id": "FORMAT-11",
+          "locator": "第十一条，PDF第2页",
+          "quote": "将所有支撑材料文件使用WinRAR软件压缩在一个文件中（后缀为RAR或ZIP，大小不超过20MB）。"
+        }
+      ]
+    },
+    {
+      "id": "CUMCM-2026-NOTICE",
+      "title": "2026高教社杯全国大学生数学建模竞赛第一次通知",
+      "publisher": "全国大学生数学建模竞赛组委会",
+      "published_date": "2026-03-24",
+      "published_date_locator": "official HTML article timestamp",
+      "effective_from": null,
+      "url": "https://www.mcm.edu.cn/html_cn/node/d6fd7a0ee8f3a3d525e30af1c365fcec.html",
+      "document_url": "https://www.mcm.edu.cn/upload_cn/node/779/D3txF20S95f4041e22b41b4a1f9e0e22ac8a1389.pdf",
+      "sha256": "cf9c59dc9fd329377c0696a83b804d373ab927b4036d28b608c1e9c7909e8ec0",
+      "hash_scope": "downloaded PDF bytes",
+      "html_sha256": "cd7c2ee651d7ad735ab066bb856cae240401bb843587a3eceab74a376b252517",
+      "verification_status": "VERIFIED_HASH_ONLY",
+      "verification_method": "anonymous HTTPS 200; SHA-256 matches prior snapshot; scanned PDF clauses not reread in this check",
+      "clauses": []
+    },
+    {
+      "id": "OPENAI-ASTRA-API",
+      "title": "GPT-6 Astra",
+      "publisher": "OpenAI",
+      "published_date": null,
+      "published_date_locator": "not stated in fetched page",
+      "effective_from": null,
+      "url": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+      "sha256": "bd6b4003758bfde4fae07485740ed53928bf0dbed04f0e0fce3e2fc8295269aa",
+      "hash_scope": "documentation connector Markdown text saved as UTF-8 with one terminal LF added; not raw HTTP HTML",
+      "verification_status": "VERIFIED_DOCUMENTATION_CONNECTOR",
+      "verification_method": "official documentation search followed by fetch_openai_doc; full returned Markdown read",
+      "clauses": [
+        {
+          "id": "ASTRA-API-EFFORT",
+          "locator": "GPT-6 Astra introduction, before Snapshots",
+          "quote": "`reasoning.effort` supports `low`, `medium`, `high`, `xhigh`, and `max`."
+        }
+      ]
+    },
+    {
+      "id": "OPENAI-CODEX-MODES",
+      "title": "Models",
+      "publisher": "OpenAI",
+      "published_date": null,
+      "published_date_locator": "not stated in fetched page",
+      "effective_from": null,
+      "url": "https://learn.chatgpt.com/docs/models",
+      "sha256": "6edfa6f0c45fc0cb4d63b06f09404e448dcbf1bf9cc909b71f81e27352544522",
+      "hash_scope": "documentation connector Markdown text saved as UTF-8 with one terminal LF added; not raw HTTP HTML",
+      "verification_status": "VERIFIED_DOCUMENTATION_CONNECTOR",
+      "verification_method": "official documentation search followed by fetch_openai_doc; full returned Markdown read",
+      "clauses": [
+        {
+          "id": "CODEX-MAX",
+          "locator": "Choosing Astra, Sol, Terra, and Luna > Know when to use Max or Ultra",
+          "quote": "**Max** gives the selected model more time to reason about a single task."
+        },
+        {
+          "id": "CODEX-ULTRA",
+          "locator": "Choosing Astra, Sol, Terra, and Luna > Know when to use Max or Ultra",
+          "quote": "**Ultra** uses [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to handle separate parts of a complex task in parallel."
+        },
+        {
+          "id": "CODEX-AVAILABILITY",
+          "locator": "Recommended models, after model list",
+          "quote": "Availability depends on the rollout, your sign-in method, and your client."
+        }
+      ]
+    }
+  ]
+}
