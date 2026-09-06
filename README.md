@@ -55,6 +55,7 @@ $mathmodel-astra 从 HANDOFF 和实际文件恢复，核实进程与证据，继
 | [references/runtime.md](references/runtime.md) | 脚本接口、依赖与运行范围 |
 | [references/linear-solutions.md](references/linear-solutions.md) | 最终线性方案、取整与费用核对，附可运行接口和反例 |
 | [references/prediction-validation.md](references/prediction-validation.md) | 预测对象、分组与时间划分、训练内预处理及重复观测反例 |
+| [references/parameter-identifiability.md](references/parameter-identifiability.md) | 参数反演、尺度、局部秩与条件数、剖面分析和可运行诊断 |
 
 其他按需参考从 `SKILL.md` 路由进入。
 
@@ -116,6 +117,17 @@ GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归
 ```
 
 `run` 要求新目录，保存各折索引、每条预测、指标、验证记录及图文；`render` 复用未变化的有效证据，不重新训练。该例用于检查重复观测的评价边界，不代表真实赛题性能或官方论文复现。科学计算依赖仅在运行对应演练或测试时需要。
+
+## 诊断反演参数
+
+拟合残差小不保证参数唯一。`diagnose_identifiability.py` 对实际导出的 Jacobian 做尺度归一化和 SVD，输出局部数值秩、条件数与未确定的一阶参数方向。输入示例、解释范围及如何改报参数组合见[参数可辨识性](references/parameter-identifiability.md)。只需 NumPy；不自动求导、拟合模型或计算置信区间。
+
+```sh
+.venv/bin/python scripts/diagnose_identifiability.py --input jacobian.json --output results/sensitivity.json
+.venv/bin/python -m unittest discover -s tests/numerical -v
+```
+
+诊断完成与科学结论分开记录：秩亏时命令仍成功完成，并给出具体未确定方向。满列秩时继续结合奇异值尺度、噪声、剖面与模型结构判断参数精度。
 
 ## 论文来源
 

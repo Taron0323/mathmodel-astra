@@ -32,6 +32,7 @@ jobs:
       - run: python scripts/verify_runtime.py --workspace practice/ci-runtime
       - run: python -m unittest discover -s tests/prediction -v
       - run: python scripts/grouped_prediction_demo.py run --workspace practice/ci-prediction
+      - run: python -m unittest discover -s tests/numerical -v
       - uses: actions/upload-artifact@v4
         if: always()
         with:

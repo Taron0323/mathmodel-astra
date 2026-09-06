@@ -37,4 +37,6 @@ python <skill>/scripts/run_workflow.py status --manifest <demo>/workflow.json
 
 预测划分演练使用 `grouped_prediction_demo.py run --workspace <项目>/practice/<新目录>`，依赖 numpy、scikit-learn、matplotlib。它生成具有重复观测的合成数据，比较记录与个体划分；`render` 仅复用当前有效证据绘图和生成说明。它是单独的固定反例脚本，没有运输运行器的分阶段恢复接口。预测目标、输出与命令详见 [预测验证](prediction-validation.md)。
 
+参数反演可使用 `diagnose_identifiability.py --input <Jacobian.json> --output <诊断.json>`，依赖 NumPy。它按声明的尺度计算局部数值秩、奇异值、条件数和未确定的一阶方向，保存输入与代码哈希。退出码 0 表示诊断完成，秩亏仍是有效诊断；输入或数值错误返回 2 并写错误记录。它不自动计算导数或统计区间，输入格式与解释见 [参数可辨识性](parameter-identifiability.md)。
+
 运行器成功意味着命令退出和输出完整性通过。是否科学有效由该阶段具体的数学验证程序和队员核验决定，不能以运行器 COMPLETE 替代。
