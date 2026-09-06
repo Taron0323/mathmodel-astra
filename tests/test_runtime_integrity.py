@@ -198,7 +198,12 @@ class RuntimeIntegrityTests(unittest.TestCase):
         self.assertEqual(self.invoke(expected=1)["reason"], "DEPENDENCY_CHANGED")
         self.assertEqual((self.root / "raw/data.txt").read_text(), "preserve")
         self.assertFalse((self.root / "results").is_symlink())
-        self.assertTrue(any(path.is_symlink() for path in (self.root / ".workflow/stale").rglob("results")))
+        # Python 3.10's literal-path glob skips dangling symlinks.
+        archived = [Path(folder) / name for folder, directories, files in os.walk(self.root / ".workflow/stale")
+                    for name in directories + files if name == "results"]
+        self.assertEqual(len(archived), 1)
+        self.assertTrue(archived[0].is_symlink())
+        self.assertEqual(archived[0].readlink(), Path("raw"))
 
     def test_raw_directory_protection_includes_declared_symlink_paths(self):
         (self.root / "raw").mkdir()
