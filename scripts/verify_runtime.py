@@ -10,6 +10,7 @@ import signal
 import subprocess
 import sys
 import time
+from unittest.mock import patch
 
 from run_workflow import alive, digest, json_write, quarantine
 import transport_demo
@@ -223,11 +224,62 @@ def main():
     transport_demo.validate(failed_validation)
     evidence_files = (*transport_demo.VALIDATION_SOURCES, *transport_demo.VALIDATION_ARTIFACTS, transport_demo.VALIDATION_STATE)
     evidence_before = {name: (digest(failed_validation / name), (failed_validation / name).stat().st_mtime_ns) for name in evidence_files}
-    transport_demo.report(failed_validation)
+    try:
+        transport_demo.report(failed_validation)
+        redraw_required = False
+    except ValueError:
+        redraw_required = True
+    check("revalidation_requires_figure_refresh", redraw_required,
+          "New numeric validation alone cannot endorse figures generated against an earlier validation record")
     transport_demo.plot(failed_validation)
+    transport_demo.report(failed_validation)
     check("publication_reuses_current_validation", evidence_before == {
         name: (digest(failed_validation / name), (failed_validation / name).stat().st_mtime_ns) for name in evidence_files},
         "Current evidence permits report and plot without solving again or rewriting validation")
+
+    for name in ("missing-png", "replaced-png", "missing-svg", "replaced-svg", "missing-state", "empty-state", "obsolete-state"):
+        publication = root / ("figure-" + name)
+        shutil.copytree(main, publication)
+        if name.endswith(("png", "svg")):
+            path = publication / "figures" / ("transport." + name.rsplit("-", 1)[1])
+            if name.startswith("missing"):
+                path.unlink()
+            else:
+                shutil.copy2(zero_baseline / "figures" / path.name, path)
+        elif name == "missing-state":
+            (publication / transport_demo.FIGURE_STATE).unlink()
+        else:
+            record = read(publication / transport_demo.FIGURE_STATE) if name == "obsolete-state" else {}
+            if name == "obsolete-state":
+                record["code_sha256"] = "0" * 64
+            json_write(publication / transport_demo.FIGURE_STATE, record)
+        report_outputs = ("result.md", "evidence/claims.csv", "evidence/ai-use.json")
+        report_before = {name: (digest(publication / name), (publication / name).stat().st_mtime_ns) for name in report_outputs}
+        transport_demo.require_validation(publication)
+        try:
+            transport_demo.report(publication)
+            rejected = False
+        except ValueError:
+            rejected = True
+        check("report_rejects_figure_" + name.replace("-", "_"), rejected and report_before == {
+            name: (digest(publication / name), (publication / name).stat().st_mtime_ns) for name in report_outputs},
+            "figure-" + name + ": current numeric evidence cannot endorse missing or mismatched figures; report artifacts are preserved")
+
+    failed_plot = root / "figure-failed-redraw"
+    shutil.copytree(main, failed_plot)
+    with patch.object(transport_demo, "render_figure", side_effect=RuntimeError("Injected renderer failure")):
+        try:
+            transport_demo.plot(failed_plot)
+        except RuntimeError:
+            pass
+    revoked = read(failed_plot / transport_demo.FIGURE_STATE)["status"] == "FAIL"
+    try:
+        transport_demo.report(failed_plot)
+        revoked = False
+    except ValueError:
+        pass
+    check("failed_redraw_revokes_report", revoked,
+          "Renderer failure writes FAIL figure state; previously generated images cannot restore report permission")
 
     changed = root / "changed-input"
     execute("transport_demo.py", "init", "--workspace", changed)

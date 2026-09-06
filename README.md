@@ -94,6 +94,8 @@ GitHub Actions 在 Linux、macOS 与 Python 3.10、3.13 的组合上执行回归
 
 图文生成要求验证覆盖完整并与当前输入、结果和代码匹配，空表、部分 PASS 和旧版本记录都会被拒绝。升级旧演练清单时需登记新增的 `evidence/validation-state.json` 及相关依赖，具体见[运行接口](references/runtime.md)。
 
+运输图表还生成 `evidence/figure-state.json`，把 PNG/SVG 与实际数值证据绑定。单独调用 `report` 也会拒绝缺图、错图或失败的重绘记录；数值重新验证后依次运行 `plot`、`report`。旧清单需将图表状态加入 `plot.outputs` 与 `report.inputs`，迁移方式同见运行接口。
+
 ## 核对最终优化方案
 
 `scripts/verify_linear_solution.py` 从独立登记的线性模型和最终解 JSON 复算约束、变量上下界、整数/二元域与目标值，适用于 LP/MILP 求解后以及取整、裁剪等后处理之后。只依赖标准库；提供输入哈希和逐项残差，区分可行性、费用一致性与尚未核验的最优性。

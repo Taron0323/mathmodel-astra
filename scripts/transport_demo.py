@@ -15,6 +15,9 @@ from run_workflow import digest, json_write, stamp
 VALIDATION_SOURCES = ("input/transport.json", "input/acceptance.json", "results/allocation.csv", "results/summary.csv")
 VALIDATION_ARTIFACTS = ("evidence/validation.csv", "evidence/enumeration.json")
 VALIDATION_STATE = "evidence/validation-state.json"
+FIGURE_FILES = ("figures/transport.png", "figures/transport.svg")
+FIGURE_SOURCES = (*VALIDATION_SOURCES, *VALIDATION_ARTIFACTS, VALIDATION_STATE)
+FIGURE_STATE = "evidence/figure-state.json"
 
 
 def write_csv(path, rows, fields=None):
@@ -101,8 +104,8 @@ def init(root, missing=False):
         ("audit", ["input/transport.json", "input/acceptance.json"], ["clean/audit.json"]),
         ("solve", ["input/transport.json", "clean/audit.json"], ["results/allocation.csv", "results/summary.csv", "results/solver.json"]),
         ("validate", list(VALIDATION_SOURCES), [*VALIDATION_ARTIFACTS, VALIDATION_STATE]),
-        ("plot", [*VALIDATION_SOURCES, *VALIDATION_ARTIFACTS, VALIDATION_STATE], ["figures/transport.png", "figures/transport.svg"]),
-        ("report", [*VALIDATION_SOURCES, *VALIDATION_ARTIFACTS, VALIDATION_STATE, "figures/transport.png", "figures/transport.svg"],
+        ("plot", list(FIGURE_SOURCES), [*FIGURE_FILES, FIGURE_STATE]),
+        ("report", [*FIGURE_SOURCES, *FIGURE_FILES, FIGURE_STATE],
          ["result.md", "evidence/claims.csv", "evidence/ai-use.json"]) ]
     json_write(root / "workflow.json", {"version": 1, "mode": "SYNTHETIC_PRACTICE",
         "packages": ["numpy", "scipy", "matplotlib"],
@@ -275,7 +278,36 @@ def validate_results(root):
 
 
 def plot(root):
-    require_validation(root)
+    record = {"status": "RUNNING", "started_at": stamp(), "code_sha256": digest(__file__),
+              "actor": "AUTOMATED_CODE", "visual_review": "NOT_PERFORMED"}
+    json_write(root / FIGURE_STATE, record)
+    try:
+        require_validation(root)
+        sources = validation_hashes(root, FIGURE_SOURCES)
+        render_figure(root)
+        if sources != validation_hashes(root, FIGURE_SOURCES):
+            raise ValueError("Figure source evidence changed during rendering")
+        record.update(status="PASS", files={**sources, **validation_hashes(root, FIGURE_FILES)})
+    except Exception as exc:
+        record.update(status="FAIL", error=type(exc).__name__ + ": " + str(exc))
+        raise
+    finally:
+        record["finished_at"] = stamp()
+        json_write(root / FIGURE_STATE, record)
+
+
+def require_figures(root):
+    try:
+        record = read_json(root, FIGURE_STATE)
+        current = validation_hashes(root, (*FIGURE_SOURCES, *FIGURE_FILES))
+    except FileNotFoundError as exc:
+        raise ValueError("Report requires both figures and their generation record; run plot first") from exc
+    if (record.get("status") != "PASS" or record.get("code_sha256") != digest(__file__)
+            or record.get("files") != current):
+        raise ValueError("Figure generation failed or its evidence changed; rerun plot before report")
+
+
+def render_figure(root):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -310,6 +342,7 @@ def plot(root):
 
 def report(root):
     checks = require_validation(root)
+    require_figures(root)
     _, supply, demand, _ = instance(root)
     row = load_csv(root, "results/summary.csv")[0]
     allocation = load_csv(root, "results/allocation.csv")
@@ -346,16 +379,16 @@ def report(root):
     write_csv(root / "evidence/claims.csv", [
         {"claim_id": "DEMO-C1", "claim": f"Declared LP optimal cost is {objective:g}", "evidence_class": "SYNTHETIC_PRACTICE",
          "code": str(Path(__file__).resolve()), "code_symbols": "solve,validate", "code_sha256": digest(__file__), "result": "results/summary.csv:row1",
-         "validation": "evidence/validation.csv:independent_integer_enumeration", "figure": "figures/transport.svg",
+         "validation": "evidence/validation.csv:independent_integer_enumeration", "figure": "figures/transport.svg", "figure_record": FIGURE_STATE,
          "manuscript": "result.md:计算结果", "human_review": "NOT_PERFORMED"},
         {"claim_id": "DEMO-C2", "claim": f"Savings versus declared greedy baseline: {baseline-objective:g}", "evidence_class": "SYNTHETIC_PRACTICE",
          "code": str(Path(__file__).resolve()), "code_symbols": "greedy,solve", "code_sha256": digest(__file__), "result": "results/summary.csv:row1",
-         "validation": "evidence/validation.csv:baseline_feasible,baseline_dominance", "figure": "figures/transport.svg",
+         "validation": "evidence/validation.csv:baseline_feasible,baseline_dominance", "figure": "figures/transport.svg", "figure_record": FIGURE_STATE,
          "manuscript": "result.md:计算结果", "human_review": "NOT_PERFORMED"},
         {"claim_id": "DEMO-C3", "claim": f"Enumeration covers {enumeration['feasible_allocations']} feasible integer allocations with minimum {float(enumeration['objective']):g}",
          "evidence_class": "SYNTHETIC_PRACTICE", "code": str(Path(__file__).resolve()), "code_symbols": "enumerate_integer,validate",
          "code_sha256": digest(__file__), "result": "evidence/enumeration.json", "validation": "evidence/validation.csv:independent_integer_enumeration",
-         "figure": "", "manuscript": "result.md:校验与适用范围", "human_review": "NOT_PERFORMED"}])
+         "figure": "", "figure_record": "", "manuscript": "result.md:校验与适用范围", "human_review": "NOT_PERFORMED"}])
     json_write(root / "evidence/ai-use.json", {"evidence_class": "SYNTHETIC_PRACTICE", "tool": "Codex",
         "purpose": "Generate deterministic helper code, run synthetic validation and draft the accompanying explanation",
         "model": "NOT_RECORDED_BY_SCRIPT", "reasoning_effort": "NOT_RECORDED_BY_SCRIPT",
